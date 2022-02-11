@@ -39,6 +39,9 @@ const api = {
    readReceiver: '/receiver',
    //PAYMENTS
    readPayments: '/payments',
+   addPayment: '/payment/add',
+   //SALES REF
+   readSalesRef: '/sales/ref',
 };
 
 //applay url name

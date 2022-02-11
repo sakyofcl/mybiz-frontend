@@ -113,4 +113,18 @@ function storeNextINvoiceNo(dispatch, data = {}) {
    });
 }
 
-export { storeNextINvoiceNo, storeInvoiceCustomerInfo, storeInvoiceCustomers, storeInvoiceDate, storeInvoiceItem, setInvoiceFilterItem, storeInvoiceDiscount, calculateInvoiceAmount, resetInvoice, storeInvoice, storePaymentStatus, storeInvoiceRemark, addNewInvoiceItem, removeInvoiceItem, storeInvoicePayment, removeInvoicePayment };
+function storeSalesRef(dispatch, data = {}) {
+   dispatch({
+      type: type.STORE_SALES_REF,
+      payload: { ...data },
+   });
+}
+
+function storeFetchSalesRef(dispatch, data = {}) {
+   dispatch({
+      type: type.STORE_FETCH_SALES_REF,
+      payload: { ...data },
+   });
+}
+
+export { storeFetchSalesRef, storeSalesRef, storeNextINvoiceNo, storeInvoiceCustomerInfo, storeInvoiceCustomers, storeInvoiceDate, storeInvoiceItem, setInvoiceFilterItem, storeInvoiceDiscount, calculateInvoiceAmount, resetInvoice, storeInvoice, storePaymentStatus, storeInvoiceRemark, addNewInvoiceItem, removeInvoiceItem, storeInvoicePayment, removeInvoicePayment };

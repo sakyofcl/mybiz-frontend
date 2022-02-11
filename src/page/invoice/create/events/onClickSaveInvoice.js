@@ -9,8 +9,9 @@ import { resetInvoice } from '../../../../redux/action/invoice';
 import { alertkey } from '../../../../constant/alertkey';
 import { popupkey } from '../../../../constant/popupkey';
 import { loaderkey } from '../../../../constant/loaderkey';
+import { ChangeState } from '../../../../lib/ChangeState';
 
-function onClickSaveInvoice(e, dispatch, invoice) {
+function onClickSaveInvoice(e, dispatch, invoice, state, setState) {
    let saveType = e.target.dataset.type;
    var {
       invoiceFeild,
@@ -20,6 +21,7 @@ function onClickSaveInvoice(e, dispatch, invoice) {
       payment_status,
       remark: { one, two },
       payment,
+      sales_ref,
    } = invoice;
 
    let uploadPayload = {
@@ -33,6 +35,10 @@ function onClickSaveInvoice(e, dispatch, invoice) {
       remark2: two,
       payment: [],
    };
+
+   if (sales_ref !== '') {
+      uploadPayload[sales_ref] = sales_ref;
+   }
 
    //SET INVOICE ITEMS
    Object.keys(invoiceFeild).map((v) => {
@@ -73,6 +79,15 @@ function onClickSaveInvoice(e, dispatch, invoice) {
                msg: res.data.message,
                status: 1,
             });
+
+            if (saveType === 'print') {
+               setState(
+                  ChangeState(state, {
+                     directPrintData: res.data.data,
+                     printStatus: true,
+                  })
+               );
+            }
          } else {
             showAlert(dispatch, alertkey.C_INVOICE_ALERT, {
                msg: res.data.message,

@@ -3,28 +3,37 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 //components
-import PopUp from '../../../components/Popup';
-import { AppCard, AppCardBody, AppCardFooter, AppCardHead } from '../../../components/AppCard';
-import { Table, TableHead, TableBody, TableRaw, TableData } from '../../../components/AppTable';
-import { TableActionBtn, TableActionWrapper } from '../../../components/TableAction';
-import { FormItem, Text, Select, DatePicker, Option } from '../../../components/CustomFormItem';
-import { ActionButton } from '../../../components/ActionButton';
+import PopUp from '../../components/Popup';
+import { AppCard, AppCardBody, AppCardFooter, AppCardHead } from '../../components/AppCard';
+import { Table, TableHead, TableBody, TableRaw, TableData } from '../../components/AppTable';
+import { TableActionBtn, TableActionWrapper } from '../../components/TableAction';
+import { FormItem, Text, Select, DatePicker, Option } from '../../components/CustomFormItem';
+import { ActionButton } from '../../components/ActionButton';
+import Alert from '../../components/Alert';
+import { TopLoader } from '../../components/Loader';
 //constant
-import { popupkey } from '../../../constant/popupkey';
+import { popupkey } from '../../constant/popupkey';
+import { alertkey } from '../../constant/alertkey';
+import { loaderkey } from '../../constant/loaderkey';
 //action
-import { hidePopup } from '../../../redux/action/popup';
-import { storeInvoicePayment, removeInvoicePayment, calculateInvoiceAmount } from '../../../redux/action/invoice';
+import { hidePopup } from '../../redux/action/popup';
+import { hideAlert, showAlert } from '../../redux/action/alert';
+import { hideLoader, showLoader } from '../../redux/action/loader';
+import { readInvoice } from '../../logic/invoice';
+import { addPayment } from '../../logic/payment';
 
-function AddPayment(props) {
+function PaymentWindow(props) {
    const amountText = React.createRef();
+   const { pos } = props;
    const dispatch = useDispatch();
-   const { popup, invoice } = useSelector((state) => state);
+   const { popup, invoice, alert, loader } = useSelector((state) => state);
    const formik = useFormik({
       initialValues: {
          method: 'cash',
          date: new Date().toISOString().substring(0, 10),
          amount: '',
          refrence: '',
+         invoice_id: invoice.data[pos].invoice_id,
       },
       validationSchema: yup.object({
          method: yup.string().required('Payment method is required.'),
@@ -32,14 +41,24 @@ function AddPayment(props) {
          amount: yup.number().required('Payment amount is required.'),
       }),
       onSubmit: (formData) => {
-         storeInvoicePayment(dispatch, {
-            data: formData,
+         showLoader(dispatch, loaderkey.C_PAYMENT_L);
+         addPayment(dispatch, formData, (res) => {
+            let status = 0;
+            if (res.data.status) {
+               status = 1;
+               readInvoice(dispatch, false);
+               formik.resetForm();
+            } else {
+               status = 0;
+            }
+
+            showAlert(dispatch, alertkey.C_PAYMENT_ALERT, {
+               msg: res.data.message,
+               status: status,
+            });
+
+            hideLoader(dispatch, loaderkey.C_PAYMENT_L);
          });
-
-         calculateInvoiceAmount(dispatch, { key: 'balance' });
-         hidePopup(dispatch, popupkey.ADD_INVOICE_PAYMENT);
-
-         formik.resetForm();
       },
    });
 
@@ -48,8 +67,17 @@ function AddPayment(props) {
    }, []);
 
    return (
-      <PopUp size='md' center={true} show={popup.display[popupkey.ADD_INVOICE_PAYMENT]} close={() => hidePopup(dispatch, popupkey.ADD_INVOICE_PAYMENT)} title='ADD PAYMENT'>
+      <PopUp size='md' center={true} show={popup.display[popupkey.PAYMENT_WINDOW]} close={() => hidePopup(dispatch, popupkey.PAYMENT_WINDOW)} title='ADD PAYMENT'>
+         <TopLoader state={loader.display[loaderkey.C_PAYMENT_L]} />
          <form className='row' onSubmit={formik.handleSubmit} autoComplete='off'>
+            <div className='col-12'>
+               <Alert
+                  state={alert.display[alertkey.C_PAYMENT_ALERT]}
+                  close={(e) => {
+                     hideAlert(dispatch, alertkey.C_PAYMENT_ALERT);
+                  }}
+               />
+            </div>
             <div className='col-12 col-md-6'>
                <FormItem label='Method' message={formik.errors.mathod}>
                   <Select
@@ -95,7 +123,8 @@ function AddPayment(props) {
                <ActionButton text='ADD' cls='btn-success' type='submit' />
             </div>
          </form>
-         <div className='row mt-4'>
+         {/*
+              <div className='row mt-4'>
             {invoice.payment.map((v, i) => {
                return (
                   <div className='col-12 mb-2' key={i}>
@@ -121,8 +150,10 @@ function AddPayment(props) {
                );
             })}
          </div>
+             
+             */}
       </PopUp>
    );
 }
 
-export { AddPayment };
+export { PaymentWindow };

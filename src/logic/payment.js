@@ -22,4 +22,10 @@ function readPayments(dispatch, force = false, page = 1, param = '') {
    }
 }
 
-export { readPayments };
+function addPayment(dispatch, data, response = (res) => {}) {
+   axios.post(api.addPayment, { ...data }).then((res) => {
+      response(res);
+   });
+}
+
+export { readPayments, addPayment };

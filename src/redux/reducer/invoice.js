@@ -25,6 +25,7 @@ let store = {
          discount: '',
          lineTotal: '',
          suggest: false,
+         barcode: '',
       },
       key2: {
          pid: '',
@@ -34,6 +35,7 @@ let store = {
          discount: '',
          lineTotal: '',
          suggest: false,
+         barcode: '',
       },
       key3: {
          pid: '',
@@ -43,6 +45,7 @@ let store = {
          discount: '',
          lineTotal: '',
          suggest: false,
+         barcode: '',
       },
       key4: {
          pid: '',
@@ -52,6 +55,7 @@ let store = {
          discount: '',
          lineTotal: '',
          suggest: false,
+         barcode: '',
       },
       key5: {
          pid: '',
@@ -61,6 +65,7 @@ let store = {
          discount: '',
          lineTotal: '',
          suggest: false,
+         barcode: '',
       },
    },
    customer: {
@@ -85,10 +90,12 @@ let store = {
       two: '',
    },
    next_invoice_no: '',
+   sales_ref: '',
+   fetchSalesRef: [],
 };
 
 const invoice = (state = store, action) => {
-   const { STORE_INVOICE, STORE_INVOICE_CUSTOMERS, STORE_INVOICE_CUSTOMER_INFO, STORE_INVOICE_DATE, STORE_INVOICE_ITEM, SET_FILTER_INVOICE_DATA, STORE_INVOICE_DISCOUNT, CALCULATE_INVOICE_AMOUNTS, RESET_INVOICE, STORE_PAYMENT_STATUS, STORE_INVOICE_REMARK, ADD_NEW_INVOICE_ITEM, REMOVE_INVOICE_ITEM, STORE_INVOICE_PAYMENT, REMOVE_INVOICE_PAYMENT, STORE_NEXT_INVOICE_NO } = type;
+   const { STORE_FETCH_SALES_REF, STORE_SALES_REF, STORE_INVOICE, STORE_INVOICE_CUSTOMERS, STORE_INVOICE_CUSTOMER_INFO, STORE_INVOICE_DATE, STORE_INVOICE_ITEM, SET_FILTER_INVOICE_DATA, STORE_INVOICE_DISCOUNT, CALCULATE_INVOICE_AMOUNTS, RESET_INVOICE, STORE_PAYMENT_STATUS, STORE_INVOICE_REMARK, ADD_NEW_INVOICE_ITEM, REMOVE_INVOICE_ITEM, STORE_INVOICE_PAYMENT, REMOVE_INVOICE_PAYMENT, STORE_NEXT_INVOICE_NO } = type;
 
    switch (action.type) {
       case STORE_INVOICE:
@@ -142,6 +149,10 @@ const invoice = (state = store, action) => {
          let lineTotal = false;
 
          switch (name) {
+            case 'barcode':
+               targetChangeObjectName = 'barcode';
+               lineTotal = false;
+               break;
             case 'name':
                targetChangeObjectName = 'name';
                lineTotal = false;
@@ -290,74 +301,7 @@ const invoice = (state = store, action) => {
       }
 
       case RESET_INVOICE: {
-         return ChangeState(state, {
-            invoiceFeild: {
-               key1: {
-                  pid: '',
-                  name: '',
-                  qty: '',
-                  price: '',
-                  discount: '',
-                  lineTotal: '',
-                  suggest: false,
-               },
-               key2: {
-                  pid: '',
-                  name: '',
-                  qty: '',
-                  price: '',
-                  discount: '',
-                  lineTotal: '',
-                  suggest: false,
-               },
-               key3: {
-                  pid: '',
-                  name: '',
-                  qty: '',
-                  price: '',
-                  discount: '',
-                  lineTotal: '',
-                  suggest: false,
-               },
-               key4: {
-                  pid: '',
-                  name: '',
-                  qty: '',
-                  price: '',
-                  discount: '',
-                  lineTotal: '',
-                  suggest: false,
-               },
-               key5: {
-                  pid: '',
-                  name: '',
-                  qty: '',
-                  price: '',
-                  discount: '',
-                  lineTotal: '',
-                  suggest: false,
-               },
-            },
-            customer: {
-               filterData: [],
-               customer_id: '',
-               customer_name: '',
-            },
-            invoiceDate: new Date().toISOString().substring(0, 10),
-            filterProduct: [],
-            finalTotal: {
-               total: 0,
-               net: 0,
-               discount: 0,
-               discountType: '%',
-               disPercentage: 0,
-            },
-            payment_status: '0',
-            remark: {
-               one: '',
-               two: '',
-            },
-         });
+         return ChangeState(state, store);
       }
       case STORE_PAYMENT_STATUS: {
          const { payment_status } = action.payload;
@@ -425,6 +369,20 @@ const invoice = (state = store, action) => {
             next_invoice_no: no,
          });
       }
+      case STORE_SALES_REF: {
+         const { data } = action.payload;
+         return ChangeState(state, {
+            sales_ref: data,
+         });
+      }
+
+      case STORE_FETCH_SALES_REF: {
+         const { data } = action.payload;
+         return ChangeState(state, {
+            fetchSalesRef: data,
+         });
+      }
+
       default:
          return state;
    }

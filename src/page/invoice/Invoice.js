@@ -13,8 +13,10 @@ import { ActionButton } from '../../components/ActionButton';
 import Badge from '../../components/Badge';
 import { ViewPayment } from './ViewPayment';
 import { ViewInvoice } from './ViewInvoice';
+import { PaymentWindow } from './PaymentWindow';
 import AppButton from '../../components/AppButton';
 import { AppPagination } from '../../components/AppPagination';
+
 //action
 import { showPopup } from '../../redux/action/popup';
 //constant
@@ -26,11 +28,12 @@ import { Head } from '../../logic/Head';
 import { ChangeState } from '../../lib/ChangeState';
 import { DateExtract } from '../../lib/DateExtract';
 import Number from '../../lib/Number';
+
 function Invoice(props) {
    Head.setTitle('Invoices | Soft Magic Kalmunai');
    const dispatch = useDispatch();
-   const [state, setState] = useState({ viewInvoicePos: 0, param: '' });
-   const { invoice } = useSelector((state) => state);
+   const [state, setState] = useState({ viewInvoicePos: 0, param: '', addPaymentPos: 0 });
+   const { invoice, popup } = useSelector((state) => state);
    const date = new DateExtract();
 
    useEffect(() => {
@@ -163,7 +166,18 @@ function Invoice(props) {
                               <TableData>
                                  <TableActionWrapper>
                                     <TableActionBtn
-                                       ico='eye-outline'
+                                       ico='cash-outline'
+                                       click={(e) => {
+                                          showPopup(dispatch, popupkey.PAYMENT_WINDOW);
+                                          setState(
+                                             ChangeState(state, {
+                                                addPaymentPos: i,
+                                             })
+                                          );
+                                       }}
+                                    />
+                                    <TableActionBtn
+                                       ico='ellipsis-vertical'
                                        click={(e) => {
                                           setState(
                                              ChangeState(state, {
@@ -206,8 +220,9 @@ function Invoice(props) {
             </AppCardFooter>
 
             {/*=============== [ POPUP ] ================*/}
+            {popup.display[popupkey.V_INVOICE_INFO] ? <ViewInvoice pos={state.viewInvoicePos} /> : ''}
             <ViewPayment />
-            <ViewInvoice pos={state.viewInvoicePos} />
+            {popup.display[popupkey.PAYMENT_WINDOW] ? <PaymentWindow pos={state.addPaymentPos} /> : ''}
          </AppCard>
       </div>
    );

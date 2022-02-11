@@ -20,6 +20,8 @@ const alertkey = {
    C_INVOICE_ALERT: 'C_INVOICE_ALERT',
    //CUSTOMER
    C_CUSTOMER_ALERT: 'C_CUSTOMER_ALERT',
+   //PAYMENT
+   C_PAYMENT_ALERT: 'C_PAYMENT_ALERT',
 };
 
 export { alertkey };

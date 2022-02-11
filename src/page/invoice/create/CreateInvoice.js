@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Form, Card } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
+import { useReactToPrint } from 'react-to-print';
 //component
 import { Result, ResultItem, ResultText } from '../../../components/Result';
 import { TopLoader } from '../../../components/Loader';
@@ -8,12 +9,14 @@ import Alert from '../../../components/Alert';
 import { ActionButton } from '../../../components/ActionButton';
 import CreateCustomer from '../../customers/CreateCustomer';
 import { AddPayment } from './AddPayment';
+import { PreviewTheme1 } from '../preview/PreviewTheme1';
 //events
 import { onChnageInvoiceItem } from './events/onChnageInvoiceItem';
 import { fetchCustomerByName } from './events/fetchCustomerByName';
 import { onClickSaveInvoice } from './events/onClickSaveInvoice';
+import { fetchSalesRef } from './events/fetchSalesRef';
 //action
-import { storeInvoiceCustomerInfo, storeInvoiceCustomers, storeInvoiceDate, storeInvoiceDiscount, storePaymentStatus, storeInvoiceRemark, addNewInvoiceItem, removeInvoiceItem, calculateInvoiceAmount } from '../../../redux/action/invoice';
+import { storeSalesRef, storeFetchSalesRef, storeInvoiceCustomerInfo, storeInvoiceCustomers, storeInvoiceDate, storeInvoiceDiscount, storePaymentStatus, storeInvoiceRemark, addNewInvoiceItem, removeInvoiceItem, calculateInvoiceAmount } from '../../../redux/action/invoice';
 import { hidePopup, showPopup } from '../../../redux/action/popup';
 import { hideAlert } from '../../../redux/action/alert';
 //constant
@@ -23,6 +26,23 @@ import { alertkey } from '../../../constant/alertkey';
 //logic
 import { getNextInvoiceNumber } from '../../../logic/invoice';
 function CreateInvoice(props) {
+   const initalState = {
+      directPrintData: {
+         invoice_id: '',
+         invoice_date: new Date(),
+         paid: 0,
+         balance: 0,
+         total_amount: 0,
+         total_discount: 0,
+         sale: [],
+      },
+      printStatus: false,
+   };
+   const previewTheme1 = useRef();
+   const handlePrintPreviewTheme1 = useReactToPrint({
+      content: () => previewTheme1.current,
+   });
+   const [state, setState] = useState(initalState);
    const dispatch = useDispatch();
    const { invoice, popup, loader, alert } = useSelector((state) => state);
    let totPaidAmount = 0;
@@ -41,7 +61,10 @@ function CreateInvoice(props) {
 
       //fetch next invoice no
       getNextInvoiceNumber(dispatch);
-   }, []);
+      if (state.printStatus) {
+         handlePrintPreviewTheme1();
+      }
+   }, [state]);
 
    return (
       <div className='app-content'>
@@ -197,6 +220,7 @@ function CreateInvoice(props) {
                                  <Form.Control
                                     type='text'
                                     data-type='barcode'
+                                    value={data.barcode}
                                     data-key={v}
                                     onChange={(e) => {
                                        onChnageInvoiceItem(e, dispatch);
@@ -430,32 +454,90 @@ function CreateInvoice(props) {
 
                <Card className='auther-info border-0'>
                   <Card.Body className='d-flex p-3 mb-3 '>
-                     <Form.Group controlId='formBasicEmail' className='w-25' style={{ paddingRight: 10 }}>
+                     <Form.Group controlId='formBasicEmail' className='w-25 position-relative p-0' style={{ paddingRight: 10 }}>
                         <Form.Label>Sales Ref</Form.Label>
-                        <Form.Control type='text' data-name='salesRef' className='w-100' />
+                        <Form.Control
+                           type='text'
+                           data-name='sales_ref'
+                           className='w-100'
+                           value={invoice.sales_ref}
+                           onChange={(e) => {
+                              fetchSalesRef(e.target.value ? e.target.value : '', 'user_id', dispatch, (res) => {
+                                 if (res.data.data.length > 0) {
+                                    storeFetchSalesRef(dispatch, { data: res.data.data });
+                                    showPopup(dispatch, popupkey.V_SALESREF_FILTER_DATA);
+                                 } else {
+                                    storeFetchSalesRef(dispatch, { data: [] });
+                                    hidePopup(dispatch, popupkey.V_SALESREF_FILTER_DATA);
+                                 }
+                              });
+                           }}
+                        />
+                        <div
+                           style={{
+                              position: 'absolute',
+                              top: 80,
+                              left: 0,
+                              zIndex: 2021,
+                           }}
+                           className={`bg-dark w-100 d-flex`}
+                        >
+                           <Result
+                              title='Finded Salesref :-'
+                              show={popup.display[popupkey.V_SALESREF_FILTER_DATA]}
+                              render={() => {
+                                 return invoice.fetchSalesRef.map((v, i) => {
+                                    return (
+                                       <ResultItem
+                                          eve={() => {
+                                             storeSalesRef(dispatch, { data: v.user_id });
+                                             hidePopup(dispatch, popupkey.V_SALESREF_FILTER_DATA);
+                                          }}
+                                          key={i}
+                                       >
+                                          <ResultText text={`${v.user_id} => ${v.name}`} />
+                                       </ResultItem>
+                                    );
+                                 });
+                              }}
+                           />
+                        </div>
                      </Form.Group>
                   </Card.Body>
                </Card>
 
-               <div className='d-flex justify-content-end'>
+               <div className='d-flex justify-content-between'>
+                  <button
+                     className='btn btn-primary invoice-action-btn'
+                     data-type='print'
+                     onClick={(e) => {
+                        onClickSaveInvoice(e, dispatch, invoice, state, setState);
+                     }}
+                  >
+                     <span data-type='print'>Print</span>
+                  </button>
+
                   <button
                      className='btn btn-success invoice-action-btn'
                      data-type='save'
                      onClick={(e) => {
-                        onClickSaveInvoice(e, dispatch, invoice);
+                        onClickSaveInvoice(e, dispatch, invoice, state, setState);
                      }}
                   >
-                     <span data-type='save' className={false ? 'd-none' : ''}>
-                        Save
-                     </span>
-                     <span className={'spinner-border spinner-border-sm ' + (false ? '' : 'd-none')}></span>
+                     <span data-type='save'>Save</span>
                   </button>
                </div>
             </div>
          </div>
 
          {/*================================ [ POPUP COMPONENT ] ================================*/}
-         <AddPayment />
+         {popup.display[popupkey.ADD_INVOICE_PAYMENT] ? <AddPayment /> : ''}
+
+         <div className='d-none'>
+            <div className='h-100 w-100' ref={previewTheme1}>
+               <PreviewTheme1 data={state.directPrintData} />
+            </div>
+         </div>
       </div>
    );
 }

@@ -1,3 +1,4 @@
+import React from 'react';
 import { Form } from 'react-bootstrap';
 function FormItem(props) {
    const { label, message, children } = props;
@@ -10,11 +11,17 @@ function FormItem(props) {
       </Form.Group>
    );
 }
+const Text = React.forwardRef((props, ref) => {
+   const { type, value, change, placeholder, name, blur, cls } = props;
+   return <Form.Control className={cls} type={type} name={name} value={value} onChange={change} placeholder={placeholder} onBlur={blur} ref={ref} />;
+});
 
+/*
 function Text(props) {
    const { type, value, change, placeholder, name, blur, af, cls } = props;
    return <Form.Control className={cls} type={type} name={name} value={value} onChange={change} placeholder={placeholder} onBlur={blur} autoFocus={af} />;
 }
+*/
 function InputDate(props) {
    const { type, value } = props;
    return <input className='form-control' type={type} value={value} />;

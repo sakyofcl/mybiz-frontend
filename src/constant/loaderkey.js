@@ -7,6 +7,8 @@ const loaderkey = {
    C_INVOICE_L: 'C_INVOICE_L',
    //CUSTOMER
    C_CUSTOMER_L: 'C_CUSTOMER_L',
+   //PAYMENT
+   C_PAYMENT_L: 'C_PAYMENT_L',
 };
 
 export { loaderkey };
