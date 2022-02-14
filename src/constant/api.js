@@ -1,5 +1,5 @@
-const appUrl = 'http://127.0.0.1:8000';
-//const appUrl = 'https://api.mybiz.royaltech.lk';
+//const appUrl = 'http://127.0.0.1:8000';
+const appUrl = 'https://api.mybiz.royaltech.lk';
 
 const api = {
    //PRODUCT
