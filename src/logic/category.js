@@ -35,4 +35,37 @@ function categorySubCreateApi(name, id, dispatch, message = (msg, status) => {})
       }
    });
 }
-export { getCategoryGroup, categoryCreateApi, categorySubCreateApi };
+
+function deleteCategory(dispatch, data = {}, response) {
+   let intKey = ['cat_id'];
+   let allData = data;
+   let finalData = {};
+
+   intKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = parseInt(allData[v]);
+      }
+   });
+
+   axios.post(api.deleteCategory, finalData).then((res) => {
+      response(res);
+   });
+}
+
+function deleteSubCategory(dispatch, data = {}, response) {
+   let intKey = ['subcat_id'];
+   let allData = data;
+   let finalData = {};
+
+   intKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = parseInt(allData[v]);
+      }
+   });
+
+   axios.post(api.deleteSubCategory, finalData).then((res) => {
+      response(res);
+   });
+}
+
+export { getCategoryGroup, categoryCreateApi, categorySubCreateApi, deleteCategory, deleteSubCategory };

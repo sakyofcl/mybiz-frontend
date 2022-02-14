@@ -24,9 +24,14 @@ function DeleteConformation(props) {
    return (
       <form onSubmit={formik.handleSubmit} autoComplete='off' className='app-delete-conf'>
          <TopLoader state={loader} />
-         <div className='app-del-icon'>
+         {/*
+            
+             <div className='app-del-icon'>
             <ion-icon name={ico}></ion-icon>
          </div>
+         
+            */}
+
          <div className='app-del-msg'>
             <span>{msg}</span>
          </div>

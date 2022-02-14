@@ -18,4 +18,20 @@ function readLocation(dispatch, force = false) {
    }
 }
 
-export { readLocation };
+function deleteLocation(dispatch, data = {}, response) {
+   let intKey = ['location_id'];
+   let allData = data;
+   let finalData = {};
+
+   intKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = parseInt(allData[v]);
+      }
+   });
+
+   axios.post(api.deleteLocation, finalData).then((res) => {
+      response(res);
+   });
+}
+
+export { readLocation, deleteLocation };

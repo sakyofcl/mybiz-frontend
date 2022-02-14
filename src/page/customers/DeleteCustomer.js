@@ -1,30 +1,54 @@
 import { useState } from 'react';
-import PopUp from '../../components/Popup';
-import { Row, Col } from 'react-bootstrap';
-import Alert from '../../components/Alert';
+import { useSelector, useDispatch } from 'react-redux';
 
-import { popupkey } from '../../constant/popupkey';
-import { hidePopup } from '../../redux/action/popup';
 //component
 import { DeleteConformation } from '../../components/DeleteConformation';
+import PopUp from '../../components/Popup';
 
+//constant
+import { loaderkey } from '../../constant/loaderkey';
+import { popupkey } from '../../constant/popupkey';
+//action
+import { hideLoader, showLoader } from '../../redux/action/loader';
+import { hidePopup } from '../../redux/action/popup';
+//logic
+import { deleteCustomer, readCustomer } from '../../logic/customer';
 function DeleteCustomer(props) {
-   const [show, setShow] = useState(false);
-   const handleClose = () => setShow(false);
-   const handleShow = () => setShow(true);
+   const { popup, customer, loader } = useSelector((state) => state);
+   const { pos } = props;
+   const deleteData = customer.data[pos];
+   const dispatch = useDispatch();
 
    return (
-      <>
-         <button type='button' class='btn' onClick={handleShow}>
-            <ion-icon name='trash-outline'></ion-icon>
-         </button>
+      <PopUp show={popup.display[popupkey.D_CUSTOMER]} close={(e) => hidePopup(dispatch, popupkey.D_CUSTOMER)} title={`CUSTOMER ID : ${popup.display[popupkey.D_CUSTOMER] ? deleteData.cid : ''} `} size='sm' center={true}>
+         <div className='w-100 h-100 m-0'>
+            <DeleteConformation
+               label='ENDER CUSTOMER ID'
+               f_error='Customer id is required.'
+               loader={loader.display[loaderkey.D_CUSTOMER_L]}
+               name='customer_id'
+               cancel={(e) => hidePopup(dispatch, popupkey.D_CUSTOMER)}
+               del={(data, form) => {
+                  //START LOADER
+                  showLoader(dispatch, loaderkey.D_CUSTOMER_L);
 
-         <PopUp show={show} close={handleClose} title='DELETE CUSTOMER #102' size='md' center={true}>
-            <div className='w-100 h-100 m-0'>
-               <DeleteConformation label='Ender customer id' />
-            </div>
-         </PopUp>
-      </>
+                  deleteCustomer(dispatch, data, (res) => {
+                     if (res.data.status) {
+                        //STOP LOADER
+                        hideLoader(dispatch, loaderkey.D_CUSTOMER_L);
+                        //FETCH DATA
+                        readCustomer(dispatch, false);
+                        //RESET FORM
+                        form.resetForm();
+                        //CLOSE POPUP
+                        hidePopup(dispatch, popupkey.D_CUSTOMER);
+                     }
+                  });
+               }}
+               msg={`NAME : ${popup.display[popupkey.D_CUSTOMER] ? deleteData.name : ''} `}
+            />
+         </div>
+      </PopUp>
    );
 }
 

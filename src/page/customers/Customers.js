@@ -5,12 +5,17 @@ import * as yup from 'yup';
 //components
 import { AppCard, AppCardBody, AppCardFooter, AppCardHead } from '../../components/AppCard';
 import { Table, TableHead, TableBody, TableRaw, TableData } from '../../components/AppTable';
+import { TableActionBtn, TableActionWrapper } from '../../components/TableAction';
 import Badge from '../../components/Badge';
 import CreateCustomer from './CreateCustomer';
 import UpdateCustomer from './UpdateCustomer';
 import DeleteCustomer from './DeleteCustomer';
 import { Filter, FilterItem } from '../../components/Filter';
 import { AppPagination } from '../../components/AppPagination';
+//Action
+import { showPopup } from '../../redux/action/popup';
+//constant
+import { popupkey } from '../../constant/popupkey';
 //logic
 import { readCustomer } from '../../logic/customer';
 import { Head } from '../../logic/Head';
@@ -21,7 +26,7 @@ function Customers(props) {
    Head.setTitle('Customers | Soft Magic Kalmunai');
    const dispatch = useDispatch();
    const { customer } = useSelector((state) => state);
-   const [state, setState] = useState({ param: '' });
+   const [state, setState] = useState({ param: '', pos: 0 });
    useEffect(() => {
       readCustomer(dispatch, customer.dataFetched);
    }, []);
@@ -115,10 +120,20 @@ function Customers(props) {
                               <TableData>{v.email ? v.email : 'unknown'}</TableData>
                               <TableData>{v.status === 'active' ? <Badge title='Active' cls='bg-success' /> : <Badge title='deActive' cls='bg-danger' />}</TableData>
                               <TableData>
-                                 <div className='action-wrapper'>
-                                    <DeleteCustomer />
-                                    <UpdateCustomer />
-                                 </div>
+                                 <TableActionWrapper>
+                                    <TableActionBtn ico='create-outline' />
+                                    <TableActionBtn
+                                       ico='trash-outline'
+                                       click={(e) => {
+                                          setState(
+                                             ChangeState(state, {
+                                                pos: i,
+                                             })
+                                          );
+                                          showPopup(dispatch, popupkey.D_CUSTOMER);
+                                       }}
+                                    />
+                                 </TableActionWrapper>
                               </TableData>
                            </TableRaw>
                         );
@@ -151,6 +166,12 @@ function Customers(props) {
                />
             </AppCardFooter>
          </AppCard>
+
+         {/*-------------------------------------[ POPUP COMPONENTS]------------------------------------*/}
+
+         <DeleteCustomer pos={state.pos} />
+
+         {/*-------------------------------------[ END POPUP COMPONENTS]------------------------------------*/}
       </div>
    );
 }

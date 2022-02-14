@@ -41,4 +41,20 @@ function createCustomer(data = {}, response) {
    });
 }
 
-export { readCustomer, createCustomer };
+function deleteCustomer(dispatch, data = {}, response) {
+   let intKey = ['customer_id'];
+   let allData = data;
+   let finalData = {};
+
+   intKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = parseInt(allData[v]);
+      }
+   });
+
+   axios.post(api.deleteCustomer, finalData).then((res) => {
+      response(res);
+   });
+}
+
+export { readCustomer, createCustomer, deleteCustomer };

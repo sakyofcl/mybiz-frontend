@@ -19,7 +19,7 @@ function DeleteProduct(props) {
    const dispatch = useDispatch();
 
    return (
-      <PopUp show={popup.display[popupkey.D_PRODUCT]} close={(e) => hidePopup(dispatch, popupkey.D_PRODUCT)} title={`PRODUCT ID : ${popup.display[popupkey.D_PRODUCT] ? deleteData.pid : ''} `} size='md' center={true}>
+      <PopUp show={popup.display[popupkey.D_PRODUCT]} close={(e) => hidePopup(dispatch, popupkey.D_PRODUCT)} title={`PRODUCT ID : ${popup.display[popupkey.D_PRODUCT] ? deleteData.pid : ''} `} size='sm' center={true}>
          <div className='w-100 h-100 m-0'>
             <DeleteConformation
                label='ENDER PRODUCT ID'
@@ -45,7 +45,7 @@ function DeleteProduct(props) {
                      }
                   });
                }}
-               msg={`ITEM NAME : ${popup.display[popupkey.D_PRODUCT] ? deleteData.name1 : ''} `}
+               msg={`NAME : ${popup.display[popupkey.D_PRODUCT] ? deleteData.name1 : ''} `}
             />
          </div>
       </PopUp>

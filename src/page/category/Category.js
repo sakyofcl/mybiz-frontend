@@ -5,6 +5,7 @@ import { Accordion, useAccordionButton } from 'react-bootstrap';
 //components
 import { DataTable, DataTableHead, DataTableFooter, DataTableBody } from '../../components/DataTable';
 import DeleteCategory from './DeleteCategory';
+import DeleteSubCategory from './DeleteSubCategory';
 import Alert from '../../components/Alert';
 //Lib
 import { ChangeState } from '../../lib/ChangeState';
@@ -21,7 +22,7 @@ function Category() {
    Head.setTitle('Categories | Soft Magic Kalmunai');
    const dispatch = useDispatch();
    const { category, alert } = useSelector((state) => state);
-   const [state, setState] = useState({ main: '', sub: '' });
+   const [state, setState] = useState({ main: '', sub: '', deleteCategoryPos: 0, deleteSubCategoryPos: 0 });
    useEffect((e) => {
       getCategoryGroup(dispatch, category.dataFetched);
    }, []);
@@ -76,16 +77,27 @@ function Category() {
                                  eKey={i}
                                  catName={v.name}
                                  del={(e) => {
+                                    setState(
+                                       ChangeState(state, {
+                                          deleteCategoryPos: i,
+                                       })
+                                    );
                                     showPopup(dispatch, popupkey.D_CATEGORY);
                                  }}
                               >
                                  <>
-                                    {v.subCategory.map((v, i) => {
+                                    {v.subCategory.map((v, j) => {
                                        return (
                                           <SubCategory
                                              subName={v.name}
                                              del={(e) => {
-                                                showPopup(dispatch, popupkey.D_CATEGORY);
+                                                setState(
+                                                   ChangeState(state, {
+                                                      deleteSubCategoryPos: j,
+                                                      deleteCategoryPos: i,
+                                                   })
+                                                );
+                                                showPopup(dispatch, popupkey.D_SUBCATEGORY);
                                              }}
                                           />
                                        );
@@ -126,7 +138,9 @@ function Category() {
          </div>
 
          {/*-------------------------------------[ POPUP COMPONENTS]------------------------------------*/}
-         <DeleteCategory />
+         <DeleteCategory pos={state.deleteCategoryPos} />
+         <DeleteSubCategory pos={state.deleteSubCategoryPos} mainPos={state.deleteCategoryPos} />
+
          {/*-------------------------------------[ END POPUP COMPONENTS]------------------------------------*/}
       </div>
    );

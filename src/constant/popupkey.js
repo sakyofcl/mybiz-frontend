@@ -7,6 +7,8 @@ const popupkey = {
    C_CATEGORY: 'C_CATEGORY',
    U_CATEGORY: 'U_CATEGORY',
    D_CATEGORY: 'D_CATEGORY',
+   //SUB CATEGORY
+   D_SUBCATEGORY: 'D_SUBCATEGORY',
    //STOCK
    C_STOCK: 'C_STOCK',
    //INVOICE
@@ -18,6 +20,10 @@ const popupkey = {
    V_SALESREF_FILTER_DATA: 'V_SALESREF_FILTER_DATA',
    //CUSTOMER
    C_CUSTOMER: 'C_CUSTOMER',
+   D_CUSTOMER: 'D_CUSTOMER',
+   //LOCATION
+   C_LOCATION: 'C_LOCATION',
+   D_LOCATION: 'D_LOCATION',
 };
 
 export { popupkey };

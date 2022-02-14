@@ -1,5 +1,5 @@
-//const appUrl = 'http://127.0.0.1:8000';
-const appUrl = 'https://api.mybiz.royaltech.lk';
+const appUrl = 'http://127.0.0.1:8000';
+//const appUrl = 'https://api.mybiz.royaltech.lk';
 
 const api = {
    //PRODUCT
@@ -13,10 +13,13 @@ const api = {
    createCategory: '/category/create',
    readCategory: '/category',
    readCategoryGroup: '/category/group',
+   deleteCategory: '/category/delete',
    //SUB CATEGORY
    createSubCategory: '/subcategory/create',
+   deleteSubCategory: '/subcategory/delete',
    //PRODUCT LOCATION
    readLocation: '/productlocation',
+   deleteLocation: '/productlocation/delete',
    // PRODUCT UNIT
    readUnit: '/productunit',
    //STOCK
@@ -27,6 +30,7 @@ const api = {
    readCustomer: '/customer',
    searchCustomers: '/customer/search',
    createCustomer: '/customer/create',
+   deleteCustomer: '/customer/delete',
    //INVOICE
    readInvoice: '/invoice',
    createInvoice: '/invoice/create',
