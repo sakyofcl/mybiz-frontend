@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../lib/axios';
 import api from '../constant/api';
 import type from '../constant/type';
 
@@ -41,6 +41,28 @@ function createCustomer(data = {}, response) {
    });
 }
 
+function updateCustomer(dispatch, data = {}, response) {
+   let intKey = ['customer_id', 'type_id'];
+   let stringKey = ['name', 'contact', 'email', 'reg_no', 'address', 'city', 'status'];
+   let allData = data;
+   let finalData = {};
+
+   intKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = parseInt(allData[v]);
+      }
+   });
+   stringKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = allData[v];
+      }
+   });
+
+   axios.post(api.updateCustomer, finalData).then((res) => {
+      response(res);
+   });
+}
+
 function deleteCustomer(dispatch, data = {}, response) {
    let intKey = ['customer_id'];
    let allData = data;
@@ -57,4 +79,4 @@ function deleteCustomer(dispatch, data = {}, response) {
    });
 }
 
-export { readCustomer, createCustomer, deleteCustomer };
+export { readCustomer, createCustomer, deleteCustomer, updateCustomer };

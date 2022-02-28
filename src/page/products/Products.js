@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 //components
-
 import { AppCard, AppCardBody, AppCardFooter, AppCardHead } from '../../components/AppCard';
 import { Table, TableHead, TableBody, TableRaw, TableData } from '../../components/AppTable';
 import { ActionButton } from '../../components/ActionButton';
@@ -15,12 +14,17 @@ import Badge from '../../components/Badge';
 import { TopLoader } from '../../components/Loader';
 import { Filter, FilterItem } from '../../components/Filter';
 import { AppPagination } from '../../components/AppPagination';
+import Alert from '../../components/Alert';
+import DisplayCommonError from '../../components/DisplayCommonError';
+import AccessDenied from '../../components/AccessDenied';
 //action
 import { showPopup } from '../../redux/action/popup';
+import { hideAlert } from '../../redux/action/alert';
 import { storeProduct } from '../../redux/action/product';
 import { storeCategory } from '../../redux/action/category';
 //constant
 import { popupkey } from '../../constant/popupkey';
+import { alertkey } from '../../constant/alertkey';
 import api from '../../constant/api';
 //logic
 import { getCategoryGroup } from '../../logic/category';
@@ -32,14 +36,16 @@ import { Head } from '../../logic/Head';
 //Lib
 import { ChangeState } from '../../lib/ChangeState';
 import Number from '../../lib/Number';
+import { checkAccess } from '../../lib/CheckAccess';
 function Products(props) {
    Head.setTitle('Products | Soft Magic Kalmunai');
    const dispatch = useDispatch();
-   const { product, category, location, unit } = useSelector((state) => state);
+   const { product, category, location, unit, popup, alert, appmodule } = useSelector((state) => state);
    const [state, setState] = useState({
       subcat: [],
       param: '',
-      deleteProductPos: 0,
+      pos: 0,
+      module: 15,
    });
 
    useEffect(() => {
@@ -48,7 +54,19 @@ function Products(props) {
       readLocation(dispatch, location.dataFetched);
       readUnit(dispatch, unit.dataFetched);
       getNextBarcode(dispatch);
+
+      checkAccess(
+         dispatch,
+         appmodule,
+         state.module,
+         'r',
+         () => {},
+         () => {
+            showPopup(dispatch, popupkey.PRODUCT_ACCESS_DENIED);
+         }
+      );
    }, []);
+
    const formik = useFormik({
       initialValues: {
          pid: '',
@@ -76,19 +94,30 @@ function Products(props) {
          max: yup.number(),
       }),
       onSubmit: (formData) => {
-         let param = '';
-         Object.keys(formData).map((key) => {
-            if (formData[key] !== '') {
-               param += key + '=' + formData[key] + '&';
+         checkAccess(
+            dispatch,
+            appmodule,
+            state.module,
+            'r',
+            () => {
+               let param = '';
+               Object.keys(formData).map((key) => {
+                  if (formData[key] !== '') {
+                     param += key + '=' + formData[key] + '&';
+                  }
+               });
+               if (param !== '') {
+                  fetchProduct(dispatch, false, product.currentPage, param);
+               }
+               setState(
+                  ChangeState(state, {
+                     param: param,
+                  })
+               );
+            },
+            () => {
+               showPopup(dispatch, popupkey.PRODUCT_ACCESS_DENIED);
             }
-         });
-         if (param !== '') {
-            fetchProduct(dispatch, false, product.currentPage, param);
-         }
-         setState(
-            ChangeState(state, {
-               param: param,
-            })
          );
       },
    });
@@ -100,22 +129,46 @@ function Products(props) {
                <ActionButton
                   text='CREATE PRODUCT'
                   click={(e) => {
-                     showPopup(dispatch, popupkey.C_PRODUCT);
+                     checkAccess(
+                        dispatch,
+                        appmodule,
+                        state.module,
+                        'c',
+                        () => {
+                           showPopup(dispatch, popupkey.C_PRODUCT);
+                        },
+                        () => {
+                           console.log('work');
+                           showPopup(dispatch, popupkey.PRODUCT_ACCESS_DENIED);
+                        }
+                     );
                   }}
                   cls='btn-danger'
                />
             </AppCardHead>
 
             <AppCardBody>
+               <DisplayCommonError />
                <form onSubmit={formik.handleSubmit} autoComplete='off'>
                   <Filter
                      reset={(e) => {
-                        formik.resetForm();
-                        fetchProduct(dispatch, false, 1, '');
-                        setState(
-                           ChangeState(state, {
-                              param: '',
-                           })
+                        checkAccess(
+                           dispatch,
+                           appmodule,
+                           state.module,
+                           'c',
+                           () => {
+                              formik.resetForm();
+                              fetchProduct(dispatch, false, 1, '');
+                              setState(
+                                 ChangeState(state, {
+                                    param: '',
+                                 })
+                              );
+                           },
+                           () => {
+                              showPopup(dispatch, popupkey.PRODUCT_ACCESS_DENIED);
+                           }
                         );
                      }}
                   >
@@ -227,16 +280,48 @@ function Products(props) {
                               <TableData>{v.discount}</TableData>
                               <TableData>
                                  <TableActionWrapper>
-                                    <TableActionBtn ico='create-outline' click={(e) => showPopup(dispatch, popupkey.U_PRODUCT)} />
+                                    <TableActionBtn
+                                       ico='create-outline'
+                                       click={(e) => {
+                                          checkAccess(
+                                             dispatch,
+                                             appmodule,
+                                             state.module,
+                                             'u',
+                                             () => {
+                                                setState(
+                                                   ChangeState(state, {
+                                                      pos: i,
+                                                   })
+                                                );
+                                                showPopup(dispatch, popupkey.U_PRODUCT);
+                                             },
+                                             () => {
+                                                showPopup(dispatch, popupkey.PRODUCT_ACCESS_DENIED);
+                                             }
+                                          );
+                                       }}
+                                    />
                                     <TableActionBtn
                                        ico='trash-outline'
                                        click={(e) => {
-                                          setState(
-                                             ChangeState(state, {
-                                                deleteProductPos: i,
-                                             })
+                                          checkAccess(
+                                             dispatch,
+                                             appmodule,
+                                             state.module,
+                                             'd',
+                                             () => {
+                                                setState(
+                                                   ChangeState(state, {
+                                                      pos: i,
+                                                   })
+                                                );
+                                                showPopup(dispatch, popupkey.D_PRODUCT);
+                                             },
+                                             () => {
+                                                showPopup(dispatch, popupkey.PRODUCT_ACCESS_DENIED);
+                                             }
                                           );
-                                          showPopup(dispatch, popupkey.D_PRODUCT);
                                        }}
                                     />
                                  </TableActionWrapper>
@@ -283,8 +368,10 @@ function Products(props) {
 
          {/*-------------------------------------[ POPUP COMPONENTS]------------------------------------*/}
          <CreateProduct />
-         <UpdateProduct />
-         <DeleteProduct pos={state.deleteProductPos} />
+         {popup.display[popupkey.U_PRODUCT] ? <UpdateProduct pos={state.pos} /> : ''}
+
+         <DeleteProduct pos={state.pos} />
+         <AccessDenied displayKey={popupkey.PRODUCT_ACCESS_DENIED} />
          {/*-------------------------------------[ END POPUP COMPONENTS]------------------------------------*/}
       </div>
    );

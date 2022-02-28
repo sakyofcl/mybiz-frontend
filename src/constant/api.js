@@ -14,12 +14,16 @@ const api = {
    readCategory: '/category',
    readCategoryGroup: '/category/group',
    deleteCategory: '/category/delete',
+   updateCategory: '/category/update',
    //SUB CATEGORY
    createSubCategory: '/subcategory/create',
    deleteSubCategory: '/subcategory/delete',
+   updateSubCategory: '/subcategory/update',
    //PRODUCT LOCATION
    readLocation: '/productlocation',
    deleteLocation: '/productlocation/delete',
+   updateLocation: '/productlocation/update',
+   createLocation: '/productlocation/create',
    // PRODUCT UNIT
    readUnit: '/productunit',
    //STOCK
@@ -31,6 +35,10 @@ const api = {
    searchCustomers: '/customer/search',
    createCustomer: '/customer/create',
    deleteCustomer: '/customer/delete',
+   updateCustomer: '/customer/update',
+
+   //CUSTOMER TYPE
+   readCustomerType: '/customertype',
    //INVOICE
    readInvoice: '/invoice',
    createInvoice: '/invoice/create',
@@ -46,6 +54,17 @@ const api = {
    addPayment: '/payment/add',
    //SALES REF
    readSalesRef: '/sales/ref',
+   //MODULE
+   readModuleGroup: '/module/group',
+   //USER
+   readUser: '/user',
+   updateUser: '/user/update',
+   createUser: '/user/create',
+   deleteUser: '/user/delete',
+   //ROLE
+   readRole: '/role',
+   //AUTH
+   authLogin: '/login',
 };
 
 //applay url name

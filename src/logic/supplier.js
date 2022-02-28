@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../lib/axios';
 import api from '../constant/api';
 import { storeSupplierCode } from '../redux/action/supplier';
 

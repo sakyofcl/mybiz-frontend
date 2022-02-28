@@ -1,7 +1,7 @@
-import axios from 'axios';
+import axios from '../lib/axios';
 import api from '../constant/api';
 import { storeProduct, storeNextBarcode } from '../redux/action/product';
-
+import { displayCommonError } from '../lib/displayCommonError';
 function createProduct(dispatch, data = {}, response) {
    let intKey = ['barcode', 'cat_id', 'subcat_id', 'location_id', 're_order_level', 'qty'];
    let floatKey = ['cash_price', 'cost_price', 'max_price', 'sell_price', 'discount', 'vat'];
@@ -27,6 +27,38 @@ function createProduct(dispatch, data = {}, response) {
 
    axios.post(api.createProduct, finalData).then((res) => {
       response(res);
+
+      //Display common error when response as false
+      displayCommonError(dispatch, res);
+   });
+}
+function updateProduct(dispatch, data = {}, response) {
+   let intKey = ['barcode', 'cat_id', 'subcat_id', 'location_id', 're_order_level', 'pid', 'unit'];
+   let floatKey = ['cash_price', 'cost_price', 'max_price', 'sell_price', 'discount', 'vat'];
+   let stringKey = ['name1', 'name2'];
+   let allData = data;
+   let finalData = {};
+
+   intKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = parseInt(allData[v]);
+      }
+   });
+   floatKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = parseFloat(allData[v]);
+      }
+   });
+   stringKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = allData[v];
+      }
+   });
+
+   axios.post(api.updateProduct, finalData).then((res) => {
+      response(res);
+      //Display common error when response as false
+      displayCommonError(dispatch, res);
    });
 }
 
@@ -46,6 +78,9 @@ function fetchProduct(dispatch, force = false, page = 1, param = '') {
                dataSummary: data_summary,
             });
          }
+
+         //Display common error when response as false
+         displayCommonError(dispatch, res);
       });
    }
 }
@@ -63,6 +98,8 @@ function deleteProduct(dispatch, data = {}, response) {
 
    axios.post(api.deleteProduct, finalData).then((res) => {
       response(res);
+      //Display common error when response as false
+      displayCommonError(dispatch, res);
    });
 }
 
@@ -91,5 +128,4 @@ function checkBarcode(value, ok = (data) => {}) {
    });
 }
 
-function fetchSpecificProduct() {}
-export { createProduct, fetchProduct, fetchProductInfo, getNextBarcode, checkBarcode, deleteProduct };
+export { createProduct, fetchProduct, fetchProductInfo, getNextBarcode, checkBarcode, deleteProduct, updateProduct };

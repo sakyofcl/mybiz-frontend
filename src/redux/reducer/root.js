@@ -15,6 +15,11 @@ import { deliverymode } from './deliverymode';
 import { supplier } from './supplier';
 import { receiver } from './receiver';
 import { payment } from './payment';
+import { customertype } from './customertype';
+import { appmodule } from './appmodule';
+import { user } from './user';
+import { role } from './role';
+import { auth } from './auth';
 const root = combineReducers({
    nav: nav,
    popup: popup,
@@ -32,6 +37,11 @@ const root = combineReducers({
    supplier: supplier,
    receiver: receiver,
    payment: payment,
+   customertype: customertype,
+   appmodule: appmodule,
+   user: user,
+   role: role,
+   auth: auth,
 });
 
 export default root;

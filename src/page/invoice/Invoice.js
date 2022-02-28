@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 
@@ -16,6 +17,7 @@ import { ViewInvoice } from './ViewInvoice';
 import { PaymentWindow } from './PaymentWindow';
 import AppButton from '../../components/AppButton';
 import { AppPagination } from '../../components/AppPagination';
+import AccessDenied from '../../components/AccessDenied';
 
 //action
 import { showPopup } from '../../redux/action/popup';
@@ -28,17 +30,30 @@ import { Head } from '../../logic/Head';
 import { ChangeState } from '../../lib/ChangeState';
 import { DateExtract } from '../../lib/DateExtract';
 import Number from '../../lib/Number';
+import { checkAccess } from '../../lib/CheckAccess';
 
 function Invoice(props) {
    Head.setTitle('Invoices | Soft Magic Kalmunai');
    const dispatch = useDispatch();
-   const [state, setState] = useState({ viewInvoicePos: 0, param: '', addPaymentPos: 0 });
-   const { invoice, popup } = useSelector((state) => state);
+   let navigate = useNavigate();
+   const [state, setState] = useState({ viewInvoicePos: 0, param: '', addPaymentPos: 0, module: 1 });
+   const { invoice, popup, appmodule } = useSelector((state) => state);
    const date = new DateExtract();
 
    useEffect(() => {
       readInvoice(dispatch, invoice.fetchData);
+      checkAccess(
+         dispatch,
+         appmodule,
+         state.module,
+         'r',
+         () => {},
+         () => {
+            showPopup(dispatch, popupkey.INVOICE_ACCESS_DENIED);
+         }
+      );
    }, []);
+
    const formik = useFormik({
       initialValues: {
          id: '',
@@ -57,19 +72,30 @@ function Invoice(props) {
          max: yup.number(),
       }),
       onSubmit: (formData) => {
-         let param = '';
-         Object.keys(formData).map((key) => {
-            if (formData[key] !== '') {
-               param += key + '=' + formData[key] + '&';
+         checkAccess(
+            dispatch,
+            appmodule,
+            state.module,
+            'r',
+            () => {
+               let param = '';
+               Object.keys(formData).map((key) => {
+                  if (formData[key] !== '') {
+                     param += key + '=' + formData[key] + '&';
+                  }
+               });
+               if (param !== '') {
+                  readInvoice(dispatch, false, invoice.currentPage, param);
+               }
+               setState(
+                  ChangeState(state, {
+                     param: param,
+                  })
+               );
+            },
+            () => {
+               showPopup(dispatch, popupkey.INVOICE_ACCESS_DENIED);
             }
-         });
-         if (param !== '') {
-            readInvoice(dispatch, false, invoice.currentPage, param);
-         }
-         setState(
-            ChangeState(state, {
-               param: param,
-            })
          );
       },
    });
@@ -78,21 +104,47 @@ function Invoice(props) {
       <div className='app-content'>
          <AppCard>
             <AppCardHead title='All Invoices' sub='Total : 1020'>
-               <Link to='/invoice/create'>
-                  <ActionButton text='CREATE INVOICE' cls='btn-danger' />
-               </Link>
+               <ActionButton
+                  text='CREATE INVOICE'
+                  cls='btn-danger'
+                  click={(e) => {
+                     checkAccess(
+                        dispatch,
+                        appmodule,
+                        state.module,
+                        'c',
+                        () => {
+                           navigate('/invoice/create');
+                        },
+                        () => {
+                           showPopup(dispatch, popupkey.INVOICE_ACCESS_DENIED);
+                        }
+                     );
+                  }}
+               />
             </AppCardHead>
 
             <AppCardBody>
                <form onSubmit={formik.handleSubmit} autoComplete='off'>
                   <Filter
                      reset={(e) => {
-                        formik.resetForm();
-                        readInvoice(dispatch, false, 1, '');
-                        setState(
-                           ChangeState(state, {
-                              param: '',
-                           })
+                        checkAccess(
+                           dispatch,
+                           appmodule,
+                           state.module,
+                           'r',
+                           () => {
+                              formik.resetForm();
+                              readInvoice(dispatch, false, 1, '');
+                              setState(
+                                 ChangeState(state, {
+                                    param: '',
+                                 })
+                              );
+                           },
+                           () => {
+                              showPopup(dispatch, popupkey.INVOICE_ACCESS_DENIED);
+                           }
                         );
                      }}
                   >
@@ -223,6 +275,7 @@ function Invoice(props) {
             {popup.display[popupkey.V_INVOICE_INFO] ? <ViewInvoice pos={state.viewInvoicePos} /> : ''}
             <ViewPayment />
             {popup.display[popupkey.PAYMENT_WINDOW] ? <PaymentWindow pos={state.addPaymentPos} /> : ''}
+            <AccessDenied displayKey={popupkey.INVOICE_ACCESS_DENIED} />
          </AppCard>
       </div>
    );

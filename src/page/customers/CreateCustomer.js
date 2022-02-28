@@ -9,8 +9,7 @@ import Alert from '../../components/Alert';
 import { FormItem, Text, Select } from '../../components/CustomFormItem';
 import { TopLoader } from '../../components/Loader';
 //Logic
-import { createCustomer } from '../../logic/customer';
-
+import { createCustomer, readCustomer } from '../../logic/customer';
 //constant
 import { alertkey } from '../../constant/alertkey';
 import { popupkey } from '../../constant/popupkey';
@@ -49,6 +48,7 @@ function CreateCustomer(props) {
             let status = 1;
             if (res.data.status) {
                status = 1;
+               readCustomer(dispatch, false);
                formik.resetForm();
             } else {
                status = 0;

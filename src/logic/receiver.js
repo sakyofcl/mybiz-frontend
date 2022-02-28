@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../lib/axios';
 import api from '../constant/api';
 import { storeReceiverCode } from '../redux/action/receiver';
 function fetchReceiverData(dispatch) {

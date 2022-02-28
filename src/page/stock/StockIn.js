@@ -10,6 +10,7 @@ import { ActionButton } from '../../components/ActionButton';
 import AddStock from './AddStock';
 import { Filter, FilterItem } from '../../components/Filter';
 import { AppPagination } from '../../components/AppPagination';
+import AccessDenied from '../../components/AccessDenied';
 //Logic
 import { readStockIn } from '../../logic/stock';
 import { fetchDeliveryMode } from '../../logic/deliverymode';
@@ -23,16 +24,29 @@ import { popupkey } from '../../constant/popupkey';
 //Lib
 import { ChangeState } from '../../lib/ChangeState';
 import Number from '../../lib/Number';
+import { checkAccess } from '../../lib/CheckAccess';
+
 function StockIn(props) {
    Head.setTitle('Stock In | Soft Magic Kalmunai');
    const dispatch = useDispatch();
-   const { stock, deliverymode, supplier, receiver } = useSelector((state) => state);
-   const [state, setState] = useState({ param: '' });
+   const { stock, deliverymode, supplier, receiver, appmodule } = useSelector((state) => state);
+   const [state, setState] = useState({ param: '', module: 18 });
    useEffect(() => {
       readStockIn(dispatch, stock.dataFetched);
       fetchDeliveryMode(dispatch, deliverymode.dataFetched);
       fetchSupplierData(dispatch, 'code');
       fetchReceiverData(dispatch);
+
+      checkAccess(
+         dispatch,
+         appmodule,
+         state.module,
+         'r',
+         () => {},
+         () => {
+            showPopup(dispatch, popupkey.STOCK_IN_ACCESS_DENIED);
+         }
+      );
    }, []);
    const formik = useFormik({
       initialValues: {
@@ -57,20 +71,31 @@ function StockIn(props) {
          max: yup.number(),
       }),
       onSubmit: (formData) => {
-         let param = '';
-         Object.keys(formData).map((key) => {
-            if (formData[key] !== '') {
-               param += key + '=' + formData[key] + '&';
-            }
-         });
-         if (param !== '') {
-            readStockIn(dispatch, false, stock.currentPage, param);
-         }
+         checkAccess(
+            dispatch,
+            appmodule,
+            state.module,
+            'r',
+            () => {
+               let param = '';
+               Object.keys(formData).map((key) => {
+                  if (formData[key] !== '') {
+                     param += key + '=' + formData[key] + '&';
+                  }
+               });
+               if (param !== '') {
+                  readStockIn(dispatch, false, stock.currentPage, param);
+               }
 
-         setState(
-            ChangeState(state, {
-               param: param,
-            })
+               setState(
+                  ChangeState(state, {
+                     param: param,
+                  })
+               );
+            },
+            () => {
+               showPopup(dispatch, popupkey.STOCK_IN_ACCESS_DENIED);
+            }
          );
       },
    });
@@ -82,7 +107,18 @@ function StockIn(props) {
                <ActionButton
                   text='ADD STOCK'
                   click={(e) => {
-                     showPopup(dispatch, popupkey.C_STOCK);
+                     checkAccess(
+                        dispatch,
+                        appmodule,
+                        state.module,
+                        'c',
+                        () => {
+                           showPopup(dispatch, popupkey.C_STOCK);
+                        },
+                        () => {
+                           showPopup(dispatch, popupkey.STOCK_IN_ACCESS_DENIED);
+                        }
+                     );
                   }}
                   cls='btn-danger'
                />
@@ -92,12 +128,23 @@ function StockIn(props) {
                <form onSubmit={formik.handleSubmit} autoComplete='off'>
                   <Filter
                      reset={(e) => {
-                        formik.resetForm();
-                        readStockIn(dispatch, false, 1, '');
-                        setState(
-                           ChangeState(state, {
-                              param: '',
-                           })
+                        checkAccess(
+                           dispatch,
+                           appmodule,
+                           state.module,
+                           'r',
+                           () => {
+                              formik.resetForm();
+                              readStockIn(dispatch, false, 1, '');
+                              setState(
+                                 ChangeState(state, {
+                                    param: '',
+                                 })
+                              );
+                           },
+                           () => {
+                              showPopup(dispatch, popupkey.STOCK_IN_ACCESS_DENIED);
+                           }
                         );
                      }}
                   >
@@ -209,6 +256,7 @@ function StockIn(props) {
          </AppCard>
          {/*========================== ADD STOCK ==============================*/}
          <AddStock />
+         <AccessDenied displayKey={popupkey.STOCK_IN_ACCESS_DENIED} />
       </div>
    );
 }

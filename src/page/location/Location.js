@@ -5,7 +5,10 @@ import { AppCard, AppCardBody, AppCardHead, AppCardFooter } from '../../componen
 import { Table, TableBody, TableData, TableHead, TableRaw } from '../../components/AppTable';
 import { TableActionBtn, TableActionWrapper } from '../../components/TableAction';
 import DeleteLocation from './DeleteLocation';
-
+import UpdateLocation from './UpdateLocation';
+import CreateLocation from './CreateLocation';
+import AccessDenied from '../../components/AccessDenied';
+import AppButton from '../../components/AppButton';
 //Action
 import { showPopup } from '../../redux/action/popup';
 //constant
@@ -17,25 +20,56 @@ import { Head } from '../../logic/Head';
 //Lib
 import { ChangeState } from '../../lib/ChangeState';
 import Number from '../../lib/Number';
+import { checkAccess } from '../../lib/CheckAccess';
 
 function Location() {
    Head.setTitle('Locations | Soft Magic Kalmunai');
    const dispatch = useDispatch();
-   const { location } = useSelector((state) => state);
-   const [state, setState] = useState({ pos: 0 });
+   const { location, popup, appmodule } = useSelector((state) => state);
+   const [state, setState] = useState({ pos: 0, module: 17 });
    useEffect(() => {
       readLocation(dispatch, location.dataFetched);
+      checkAccess(
+         dispatch,
+         appmodule,
+         state.module,
+         'r',
+         () => {},
+         () => {
+            showPopup(dispatch, popupkey.LOCATION_ACCESS_DENIED);
+         }
+      );
    }, []);
+
    return (
       <div className='app-content'>
          <div className='row m-0 p-0'>
             <div className='col-12 col-md-7'>
                <AppCard>
-                  <AppCardHead title='All Location' sub='Total : 10' />
+                  <AppCardHead title='All Location' sub='Total : 10'>
+                     <AppButton
+                        text='CREATE LOCATION'
+                        click={(e) => {
+                           checkAccess(
+                              dispatch,
+                              appmodule,
+                              state.module,
+                              'c',
+                              () => {
+                                 showPopup(dispatch, popupkey.C_LOCATION);
+                              },
+                              () => {
+                                 showPopup(dispatch, popupkey.LOCATION_ACCESS_DENIED);
+                              }
+                           );
+                        }}
+                        cls='btn-danger'
+                     />
+                  </AppCardHead>
 
                   <AppCardBody>
                      <Table>
-                        <TableHead head='Location Name,Total Products,Action' />
+                        <TableHead head='Name,Total Products,Action' />
                         <TableBody>
                            {location.data.map((v, i) => {
                               return (
@@ -44,16 +78,48 @@ function Location() {
                                     <TableData>0</TableData>
                                     <TableData>
                                        <TableActionWrapper>
-                                          <TableActionBtn ico='create-outline' />
+                                          <TableActionBtn
+                                             ico='create-outline'
+                                             click={(e) => {
+                                                checkAccess(
+                                                   dispatch,
+                                                   appmodule,
+                                                   state.module,
+                                                   'u',
+                                                   () => {
+                                                      setState(
+                                                         ChangeState(state, {
+                                                            pos: i,
+                                                         })
+                                                      );
+                                                      showPopup(dispatch, popupkey.U_LOCATION);
+                                                   },
+                                                   () => {
+                                                      showPopup(dispatch, popupkey.LOCATION_ACCESS_DENIED);
+                                                   }
+                                                );
+                                             }}
+                                          />
                                           <TableActionBtn
                                              ico='trash-outline'
                                              click={(e) => {
-                                                setState(
-                                                   ChangeState(state, {
-                                                      pos: i,
-                                                   })
+                                                checkAccess(
+                                                   dispatch,
+                                                   appmodule,
+                                                   state.module,
+                                                   'd',
+                                                   () => {
+                                                      setState(
+                                                         ChangeState(state, {
+                                                            pos: i,
+                                                         })
+                                                      );
+                                                      showPopup(dispatch, popupkey.D_LOCATION);
+                                                   },
+                                                   () => {
+                                                      showPopup(dispatch, popupkey.LOCATION_ACCESS_DENIED);
+                                                   }
                                                 );
-                                                showPopup(dispatch, popupkey.D_LOCATION);
                                              }}
                                           />
                                        </TableActionWrapper>
@@ -70,7 +136,11 @@ function Location() {
          </div>
 
          {/*-------------------------------------[ POPUP COMPONENTS]------------------------------------*/}
+         {popup.display[popupkey.U_LOCATION] ? <UpdateLocation pos={state.pos} /> : ''}
          <DeleteLocation pos={state.pos} />
+         <AccessDenied displayKey={popupkey.LOCATION_ACCESS_DENIED} />
+         <CreateLocation />
+
          {/*-------------------------------------[ END POPUP COMPONENTS]------------------------------------*/}
       </div>
    );

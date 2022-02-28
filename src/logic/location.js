@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../lib/axios';
 import api from '../constant/api';
 import type from '../constant/type';
 
@@ -34,4 +34,42 @@ function deleteLocation(dispatch, data = {}, response) {
    });
 }
 
-export { readLocation, deleteLocation };
+function updateLocation(dispatch, data = {}, response) {
+   let intKey = ['location_id'];
+   let stringKey = ['name'];
+   let allData = data;
+   let finalData = {};
+
+   intKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = parseInt(allData[v]);
+      }
+   });
+   stringKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = allData[v];
+      }
+   });
+
+   axios.post(api.updateLocation, finalData).then((res) => {
+      response(res);
+   });
+}
+
+function createLocation(dispatch, data = {}, response) {
+   let stringKey = ['name'];
+   let allData = data;
+   let finalData = {};
+
+   stringKey.map((v) => {
+      if (allData[v]) {
+         finalData[v] = allData[v];
+      }
+   });
+
+   axios.post(api.createLocation, finalData).then((res) => {
+      response(res);
+   });
+}
+
+export { readLocation, deleteLocation, updateLocation, createLocation };

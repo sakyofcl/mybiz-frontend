@@ -12,23 +12,39 @@ import UpdateCustomer from './UpdateCustomer';
 import DeleteCustomer from './DeleteCustomer';
 import { Filter, FilterItem } from '../../components/Filter';
 import { AppPagination } from '../../components/AppPagination';
+import AccessDenied from '../../components/AccessDenied';
+import { ActionButton } from '../../components/ActionButton';
+import DisplayCustomerStatus from './components/DisplayCustomerStatus';
 //Action
 import { showPopup } from '../../redux/action/popup';
 //constant
 import { popupkey } from '../../constant/popupkey';
 //logic
 import { readCustomer } from '../../logic/customer';
+import { readCustomerType } from '../../logic/customertype';
 import { Head } from '../../logic/Head';
 //Lib
 import { ChangeState } from '../../lib/ChangeState';
 import Number from '../../lib/Number';
+import { checkAccess } from '../../lib/CheckAccess';
 function Customers(props) {
    Head.setTitle('Customers | Soft Magic Kalmunai');
    const dispatch = useDispatch();
-   const { customer } = useSelector((state) => state);
-   const [state, setState] = useState({ param: '', pos: 0 });
+   const { customer, popup, customertype, appmodule } = useSelector((state) => state);
+   const [state, setState] = useState({ param: '', pos: 0, module: 8 });
    useEffect(() => {
       readCustomer(dispatch, customer.dataFetched);
+      readCustomerType(dispatch, customertype.dataFetched);
+      checkAccess(
+         dispatch,
+         appmodule,
+         state.module,
+         'r',
+         () => {},
+         () => {
+            showPopup(dispatch, popupkey.CUSTOMER_ACCESS_DENIED);
+         }
+      );
    }, []);
    const formik = useFormik({
       initialValues: {
@@ -47,20 +63,31 @@ function Customers(props) {
          contact: yup.number(),
       }),
       onSubmit: (formData) => {
-         let param = '';
-         Object.keys(formData).map((key) => {
-            if (formData[key] !== '') {
-               param += key + '=' + formData[key] + '&';
+         checkAccess(
+            dispatch,
+            appmodule,
+            state.module,
+            'r',
+            () => {
+               let param = '';
+               Object.keys(formData).map((key) => {
+                  if (formData[key] !== '') {
+                     param += key + '=' + formData[key] + '&';
+                  }
+               });
+               if (param !== '') {
+                  //readInvoice(dispatch, false, invoice.currentPage, param);
+                  readCustomer(dispatch, false, customer.currentPage, param);
+               }
+               setState(
+                  ChangeState(state, {
+                     param: param,
+                  })
+               );
+            },
+            () => {
+               showPopup(dispatch, popupkey.CUSTOMER_ACCESS_DENIED);
             }
-         });
-         if (param !== '') {
-            //readInvoice(dispatch, false, invoice.currentPage, param);
-            readCustomer(dispatch, false, customer.currentPage, param);
-         }
-         setState(
-            ChangeState(state, {
-               param: param,
-            })
          );
       },
    });
@@ -68,18 +95,46 @@ function Customers(props) {
       <div className='app-content'>
          <AppCard>
             <AppCardHead title='All Customers' sub='Total : 1520'>
-               <CreateCustomer />
+               <ActionButton
+                  text='CREATE CUSTOMER'
+                  cls='btn-danger'
+                  click={(e) => {
+                     checkAccess(
+                        dispatch,
+                        appmodule,
+                        state.module,
+                        'c',
+                        () => {
+                           showPopup(dispatch, popupkey.C_CUSTOMER);
+                        },
+                        () => {
+                           showPopup(dispatch, popupkey.CUSTOMER_ACCESS_DENIED);
+                        }
+                     );
+                  }}
+               />
             </AppCardHead>
             <AppCardBody>
                <form onSubmit={formik.handleSubmit} autoComplete='off'>
                   <Filter
                      reset={(e) => {
-                        formik.resetForm();
-                        readCustomer(dispatch, false, 1, '');
-                        setState(
-                           ChangeState(state, {
-                              param: '',
-                           })
+                        checkAccess(
+                           dispatch,
+                           appmodule,
+                           state.module,
+                           'r',
+                           () => {
+                              formik.resetForm();
+                              readCustomer(dispatch, false, 1, '');
+                              setState(
+                                 ChangeState(state, {
+                                    param: '',
+                                 })
+                              );
+                           },
+                           () => {
+                              showPopup(dispatch, popupkey.CUSTOMER_ACCESS_DENIED);
+                           }
                         );
                      }}
                   >
@@ -118,19 +173,53 @@ function Customers(props) {
                               <TableData>{v.address ? v.address : 'unknown'}</TableData>
                               <TableData>{v.city ? v.city : 'unknown'}</TableData>
                               <TableData>{v.email ? v.email : 'unknown'}</TableData>
-                              <TableData>{v.status === 'active' ? <Badge title='Active' cls='bg-success' /> : <Badge title='deActive' cls='bg-danger' />}</TableData>
+                              <TableData>
+                                 <DisplayCustomerStatus status={v.status} />
+                              </TableData>
                               <TableData>
                                  <TableActionWrapper>
-                                    <TableActionBtn ico='create-outline' />
+                                    <TableActionBtn
+                                       ico='create-outline'
+                                       click={(e) => {
+                                          checkAccess(
+                                             dispatch,
+                                             appmodule,
+                                             state.module,
+                                             'u',
+                                             () => {
+                                                setState(
+                                                   ChangeState(state, {
+                                                      pos: i,
+                                                   })
+                                                );
+                                                showPopup(dispatch, popupkey.U_CUSTOMER);
+                                             },
+                                             () => {
+                                                showPopup(dispatch, popupkey.CUSTOMER_ACCESS_DENIED);
+                                             }
+                                          );
+                                       }}
+                                    />
                                     <TableActionBtn
                                        ico='trash-outline'
                                        click={(e) => {
-                                          setState(
-                                             ChangeState(state, {
-                                                pos: i,
-                                             })
+                                          checkAccess(
+                                             dispatch,
+                                             appmodule,
+                                             state.module,
+                                             'd',
+                                             () => {
+                                                setState(
+                                                   ChangeState(state, {
+                                                      pos: i,
+                                                   })
+                                                );
+                                                showPopup(dispatch, popupkey.D_CUSTOMER);
+                                             },
+                                             () => {
+                                                showPopup(dispatch, popupkey.CUSTOMER_ACCESS_DENIED);
+                                             }
                                           );
-                                          showPopup(dispatch, popupkey.D_CUSTOMER);
                                        }}
                                     />
                                  </TableActionWrapper>
@@ -170,6 +259,9 @@ function Customers(props) {
          {/*-------------------------------------[ POPUP COMPONENTS]------------------------------------*/}
 
          <DeleteCustomer pos={state.pos} />
+         {popup.display[popupkey.U_CUSTOMER] ? <UpdateCustomer pos={state.pos} /> : ''}
+         <CreateCustomer />
+         <AccessDenied displayKey={popupkey.CUSTOMER_ACCESS_DENIED} />
 
          {/*-------------------------------------[ END POPUP COMPONENTS]------------------------------------*/}
       </div>

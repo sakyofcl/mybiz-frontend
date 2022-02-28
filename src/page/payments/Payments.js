@@ -9,19 +9,36 @@ import { TableActionBtn, TableActionWrapper } from '../../components/TableAction
 import Badge from '../../components/Badge';
 import { Filter, FilterItem } from '../../components/Filter';
 import { AppPagination } from '../../components/AppPagination';
+import AccessDenied from '../../components/AccessDenied';
 //logic
 import { readPayments } from '../../logic/payment';
 import { Head } from '../../logic/Head';
 //Lib
 import { ChangeState } from '../../lib/ChangeState';
 import Number from '../../lib/Number';
+import { checkAccess } from '../../lib/CheckAccess';
+//action
+import { showPopup } from '../../redux/action/popup';
+//constant
+import { popupkey } from '../../constant/popupkey';
+
 function Payments(props) {
    Head.setTitle('Payments | Soft Magic Kalmunai');
    const dispatch = useDispatch();
-   const { payment } = useSelector((state) => state);
-   const [state, setState] = useState({ param: '' });
+   const { payment, appmodule } = useSelector((state) => state);
+   const [state, setState] = useState({ param: '', module: 2 });
    useEffect(() => {
       readPayments(dispatch, payment.fetchData);
+      checkAccess(
+         dispatch,
+         appmodule,
+         state.module,
+         'r',
+         () => {},
+         () => {
+            showPopup(dispatch, popupkey.PAYMENT_ACCESS_DENIED);
+         }
+      );
    }, []);
    const formik = useFormik({
       initialValues: {
@@ -43,19 +60,30 @@ function Payments(props) {
          amount: yup.number(),
       }),
       onSubmit: (formData) => {
-         let param = '';
-         Object.keys(formData).map((key) => {
-            if (formData[key] !== '') {
-               param += key + '=' + formData[key] + '&';
+         checkAccess(
+            dispatch,
+            appmodule,
+            state.module,
+            'r',
+            () => {
+               let param = '';
+               Object.keys(formData).map((key) => {
+                  if (formData[key] !== '') {
+                     param += key + '=' + formData[key] + '&';
+                  }
+               });
+               if (param !== '') {
+                  readPayments(dispatch, false, payment.currentPage, param);
+               }
+               setState(
+                  ChangeState(state, {
+                     param: param,
+                  })
+               );
+            },
+            () => {
+               showPopup(dispatch, popupkey.PAYMENT_ACCESS_DENIED);
             }
-         });
-         if (param !== '') {
-            readPayments(dispatch, false, payment.currentPage, param);
-         }
-         setState(
-            ChangeState(state, {
-               param: param,
-            })
          );
       },
    });
@@ -68,12 +96,23 @@ function Payments(props) {
                <form onSubmit={formik.handleSubmit} autoComplete='off'>
                   <Filter
                      reset={(e) => {
-                        formik.resetForm();
-                        readPayments(dispatch, false, 1, '');
-                        setState(
-                           ChangeState(state, {
-                              param: '',
-                           })
+                        checkAccess(
+                           dispatch,
+                           appmodule,
+                           state.module,
+                           'r',
+                           () => {
+                              formik.resetForm();
+                              readPayments(dispatch, false, 1, '');
+                              setState(
+                                 ChangeState(state, {
+                                    param: '',
+                                 })
+                              );
+                           },
+                           () => {
+                              showPopup(dispatch, popupkey.PAYMENT_ACCESS_DENIED);
+                           }
                         );
                      }}
                   >
@@ -185,6 +224,7 @@ function Payments(props) {
                />
             </AppCardFooter>
          </AppCard>
+         <AccessDenied displayKey={popupkey.PAYMENT_ACCESS_DENIED} />
       </div>
    );
 }

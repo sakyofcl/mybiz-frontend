@@ -1,6 +1,7 @@
 const loaderkey = {
    C_PRODUCT_L: 'C_PRODUCT_L',
    D_PRODUCT_L: 'D_PRODUCT_L',
+   U_PRODUCT_L: 'U_PRODUCT_L',
    //STOCK
    C_STOCK_L: 'C_STOCK_L',
    //INVOICE
@@ -8,15 +9,23 @@ const loaderkey = {
    //CUSTOMER
    C_CUSTOMER_L: 'C_CUSTOMER_L',
    D_CUSTOMER_L: 'D_CUSTOMER_L',
+   U_CUSTOMER_L: 'U_CUSTOMER_L',
    //PAYMENT
    C_PAYMENT_L: 'C_PAYMENT_L',
    //LOCATION
    C_LOCATION_L: 'C_LOCATION_L',
    D_LOCATION_L: 'D_LOCATION_L',
+   U_LOCATION_L: 'U_LOCATION_L',
    //CATEGORY
    D_CATEGORY_L: 'D_CATEGORY_L',
    //SUB CATEGORY
    D_SUBCATEGORY_L: 'D_SUBCATEGORY_L',
+   //USER
+   C_USER_L: 'C_USER_L',
+   D_USER_L: 'D_USER_L',
+   U_USER_L: 'U_USER_L',
+   //AUTH
+   AUTH_LOGIN_L: 'AUTH_LOGIN_L',
 };
 
 export { loaderkey };

@@ -7,19 +7,35 @@ import { AppCard, AppCardBody, AppCardFooter, AppCardHead } from '../../componen
 import { Table, TableHead, TableBody, TableRaw, TableData } from '../../components/AppTable';
 import { Filter, FilterItem } from '../../components/Filter';
 import { AppPagination } from '../../components/AppPagination';
+import AccessDenied from '../../components/AccessDenied';
 //Logic
 import { readStockOut } from '../../logic/stock';
 import { Head } from '../../logic/Head';
 //Lib
 import { ChangeState } from '../../lib/ChangeState';
 import Number from '../../lib/Number';
+import { checkAccess } from '../../lib/CheckAccess';
+//action
+import { showPopup } from '../../redux/action/popup';
+import { popupkey } from '../../constant/popupkey';
 function StockOut(props) {
    Head.setTitle('Stock Out | Soft Magic Kalmunai');
    const dispatch = useDispatch();
-   const { stock } = useSelector((state) => state);
-   const [state, setState] = useState({ param: '' });
+   const { stock, appmodule } = useSelector((state) => state);
+   const [state, setState] = useState({ param: '', module: 19 });
    useEffect(() => {
       readStockOut(dispatch, stock.out.dataFetched);
+
+      checkAccess(
+         dispatch,
+         appmodule,
+         state.module,
+         'r',
+         () => {},
+         () => {
+            showPopup(dispatch, popupkey.STOCK_OUT_ACCESS_DENIED);
+         }
+      );
    }, []);
    const formik = useFormik({
       initialValues: {
@@ -33,19 +49,30 @@ function StockOut(props) {
          barcode: yup.number(),
       }),
       onSubmit: (formData) => {
-         let param = '';
-         Object.keys(formData).map((key) => {
-            if (formData[key] !== '') {
-               param += key + '=' + formData[key] + '&';
+         checkAccess(
+            dispatch,
+            appmodule,
+            state.module,
+            'r',
+            () => {
+               let param = '';
+               Object.keys(formData).map((key) => {
+                  if (formData[key] !== '') {
+                     param += key + '=' + formData[key] + '&';
+                  }
+               });
+               if (param !== '') {
+                  readStockOut(dispatch, false, stock.out.currentPage, param);
+               }
+               setState(
+                  ChangeState(state, {
+                     param: param,
+                  })
+               );
+            },
+            () => {
+               showPopup(dispatch, popupkey.STOCK_OUT_ACCESS_DENIED);
             }
-         });
-         if (param !== '') {
-            readStockOut(dispatch, false, stock.out.currentPage, param);
-         }
-         setState(
-            ChangeState(state, {
-               param: param,
-            })
          );
       },
    });
@@ -59,12 +86,23 @@ function StockOut(props) {
                <form onSubmit={formik.handleSubmit} autoComplete='off'>
                   <Filter
                      reset={(e) => {
-                        formik.resetForm();
-                        readStockOut(dispatch, false, 1, '');
-                        setState(
-                           ChangeState(state, {
-                              param: '',
-                           })
+                        checkAccess(
+                           dispatch,
+                           appmodule,
+                           state.module,
+                           'r',
+                           () => {
+                              formik.resetForm();
+                              readStockOut(dispatch, false, 1, '');
+                              setState(
+                                 ChangeState(state, {
+                                    param: '',
+                                 })
+                              );
+                           },
+                           () => {
+                              showPopup(dispatch, popupkey.STOCK_OUT_ACCESS_DENIED);
+                           }
                         );
                      }}
                   >
@@ -133,6 +171,8 @@ function StockOut(props) {
                />
             </AppCardFooter>
          </AppCard>
+
+         <AccessDenied displayKey={popupkey.STOCK_OUT_ACCESS_DENIED} />
       </div>
    );
 }

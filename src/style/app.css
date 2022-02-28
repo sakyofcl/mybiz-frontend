@@ -2112,3 +2112,50 @@ table {
       height: 1100px;
    }
 }
+
+/*--------------------------- ACCESS DENIED BOX STYLE ---------------------*/
+.access-denied-box {
+   display: flex;
+   min-height: 168px;
+   width: 100%;
+   align-items: center;
+   justify-content: center;
+}
+.access-denied-box span {
+   font-size: 20px;
+   color: var(--white);
+}
+.access-denied-box ion-icon {
+   font-size: 60px;
+   color: var(--red);
+   margin-right: 10px;
+}
+
+
+/*-------------------------- [ APP LOGIN ] --------------------------*/
+
+.app-login{
+   background-color:var(--dark-primary);
+}
+.app-login .card{
+   background-color: var(--dark-light);
+   box-shadow: var(--shadow);
+}
+.app-login .card .card-header{
+   font-weight: bold;
+   color:var(--white);
+}
+.app-login .card .card-body label{
+   color: var(--white);
+}
+
+.app-login .card .card-body input{
+   background-color: var(--dark-primary);
+   border: none;
+   color: var(--white);
+}
+.app-login .card .card-body input:focus{
+   background-color: var(--dark-primary);
+   border: none;
+   color: var(--white);
+}

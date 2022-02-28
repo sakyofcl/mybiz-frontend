@@ -1,39 +1,43 @@
 import type from '../../constant/type';
+import { ChangeState } from '../../lib/ChangeState';
 
 //get data from local storage
-let isOk=sessionStorage.getItem('auth')?sessionStorage.getItem('auth'):false;
-let token=isOk?sessionStorage.getItem('token'):false;
-let name=isOk?sessionStorage.getItem('name'):false;
+let isOk = localStorage.getItem('auth') ? localStorage.getItem('auth') : false;
+let token = isOk ? localStorage.getItem('token') : false;
+let name = isOk ? localStorage.getItem('name') : false;
 
 let store = {
-    token:token,
-    isOk:isOk,
-    name:name,
-    role:'admin'
+   token: token,
+   isOk: isOk,
+   name: name,
+   role: 'admin',
 };
 
-const auth=(state=store,action)=>{
-    const {LOG_IN,LOG_OUT}=type;
-    
-    switch(action.type){
-        case LOG_IN:
-           const {isOk,token,name}=action.payload
-            return Object.assign({},state,{
-                isOk:isOk,
-                token:token,
-                name:name
-            });
-        case LOG_OUT:
-            sessionStorage.clear();
-            return Object.assign({},state,{
-                isOk:false,
-                token:false,
-                name:false
-            });
-            
-        default:
-            return state;
-    }
-}
+const auth = (state = store, action) => {
+   const { LOG_IN, LOG_OUT } = type;
 
-export {auth};
+   switch (action.type) {
+      case LOG_IN: {
+         const { isOk, token, name } = action.payload;
+         return ChangeState(state, {
+            isOk: isOk,
+            token: token,
+            name: name,
+         });
+      }
+
+      case LOG_OUT: {
+         localStorage.clear();
+         return ChangeState(state, {
+            isOk: false,
+            token: false,
+            name: false,
+         });
+      }
+
+      default:
+         return state;
+   }
+};
+
+export { auth };

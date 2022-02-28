@@ -7,8 +7,11 @@ import { DataTable, DataTableHead, DataTableFooter, DataTableBody } from '../../
 import DeleteCategory from './DeleteCategory';
 import DeleteSubCategory from './DeleteSubCategory';
 import Alert from '../../components/Alert';
+import DisplayCommonError from '../../components/DisplayCommonError';
+import AccessDenied from '../../components/AccessDenied';
 //Lib
 import { ChangeState } from '../../lib/ChangeState';
+import { checkAccess } from '../../lib/CheckAccess';
 //action
 import { showPopup } from '../../redux/action/popup';
 import { showAlert, hideAlert } from '../../redux/action/alert';
@@ -16,15 +19,25 @@ import { showAlert, hideAlert } from '../../redux/action/alert';
 import { popupkey } from '../../constant/popupkey';
 import { alertkey } from '../../constant/alertkey';
 //logic
-import { getCategoryGroup, categoryCreateApi, categorySubCreateApi } from '../../logic/category';
+import { getCategoryGroup, categoryCreateApi, categorySubCreateApi, updateCategory, updateSubCategory } from '../../logic/category';
 import { Head } from '../../logic/Head';
 function Category() {
    Head.setTitle('Categories | Soft Magic Kalmunai');
    const dispatch = useDispatch();
-   const { category, alert } = useSelector((state) => state);
-   const [state, setState] = useState({ main: '', sub: '', deleteCategoryPos: 0, deleteSubCategoryPos: 0 });
+   const { category, alert, appmodule } = useSelector((state) => state);
+   const [state, setState] = useState({ main: '', sub: '', deleteCategoryPos: 0, deleteSubCategoryPos: 0, module: 16 });
    useEffect((e) => {
       getCategoryGroup(dispatch, category.dataFetched);
+      checkAccess(
+         dispatch,
+         appmodule,
+         state.module,
+         'r',
+         () => {},
+         () => {
+            showPopup(dispatch, popupkey.CATEGORY_ACCESS_DENIED);
+         }
+      );
    }, []);
 
    return (
@@ -46,20 +59,31 @@ function Category() {
                            <AddCategory
                               placeholder='Add New Category'
                               save={(e) => {
-                                 if (state.main) {
-                                    categoryCreateApi(state.main, dispatch, (msg, status) => {
-                                       showAlert(dispatch, alertkey.C_CATEGORY_ALERT, {
-                                          msg: msg,
-                                          status: status,
-                                       });
+                                 checkAccess(
+                                    dispatch,
+                                    appmodule,
+                                    state.module,
+                                    'c',
+                                    () => {
+                                       if (state.main) {
+                                          categoryCreateApi(state.main, dispatch, (msg, status) => {
+                                             showAlert(dispatch, alertkey.C_CATEGORY_ALERT, {
+                                                msg: msg,
+                                                status: status,
+                                             });
 
-                                       setState(
-                                          ChangeState(state, {
-                                             main: '',
-                                          })
-                                       );
-                                    });
-                                 }
+                                             setState(
+                                                ChangeState(state, {
+                                                   main: '',
+                                                })
+                                             );
+                                          });
+                                       }
+                                    },
+                                    () => {
+                                       showPopup(dispatch, popupkey.CATEGORY_ACCESS_DENIED);
+                                    }
+                                 );
                               }}
                               value={state.main}
                               change={(e) => {
@@ -77,12 +101,50 @@ function Category() {
                                  eKey={i}
                                  catName={v.name}
                                  del={(e) => {
-                                    setState(
-                                       ChangeState(state, {
-                                          deleteCategoryPos: i,
-                                       })
+                                    checkAccess(
+                                       dispatch,
+                                       appmodule,
+                                       state.module,
+                                       'd',
+                                       () => {
+                                          setState(
+                                             ChangeState(state, {
+                                                deleteCategoryPos: i,
+                                             })
+                                          );
+                                          showPopup(dispatch, popupkey.D_CATEGORY);
+                                       },
+                                       () => {
+                                          showPopup(dispatch, popupkey.CATEGORY_ACCESS_DENIED);
+                                       }
                                     );
-                                    showPopup(dispatch, popupkey.D_CATEGORY);
+                                 }}
+                                 save={(data, setState) => {
+                                    checkAccess(
+                                       dispatch,
+                                       appmodule,
+                                       state.module,
+                                       'u',
+                                       () => {
+                                          updateCategory(dispatch, { name: data.catName, cat_id: v.cat_id }, (res) => {
+                                             let status = 1;
+                                             if (res.data.status) {
+                                                status = 1;
+                                                getCategoryGroup(dispatch, false);
+                                                setState(ChangeState(data, { edit: false }));
+                                             } else {
+                                                status = 0;
+                                             }
+                                             showAlert(dispatch, alertkey.C_CATEGORY_ALERT, {
+                                                msg: res.data.message,
+                                                status: status,
+                                             });
+                                          });
+                                       },
+                                       () => {
+                                          showPopup(dispatch, popupkey.CATEGORY_ACCESS_DENIED);
+                                       }
+                                    );
                                  }}
                               >
                                  <>
@@ -90,14 +152,43 @@ function Category() {
                                        return (
                                           <SubCategory
                                              subName={v.name}
-                                             del={(e) => {
-                                                setState(
-                                                   ChangeState(state, {
-                                                      deleteSubCategoryPos: j,
-                                                      deleteCategoryPos: i,
-                                                   })
+                                             del={(e, setState) => {
+                                                checkAccess(dispatch, appmodule, state.module, 'd', () => {
+                                                   setState(
+                                                      ChangeState(state, {
+                                                         deleteSubCategoryPos: j,
+                                                         deleteCategoryPos: i,
+                                                      })
+                                                   );
+                                                   showPopup(dispatch, popupkey.D_SUBCATEGORY);
+                                                });
+                                             }}
+                                             save={(data, setState) => {
+                                                checkAccess(
+                                                   dispatch,
+                                                   appmodule,
+                                                   state.module,
+                                                   'u',
+                                                   () => {
+                                                      updateSubCategory(dispatch, { name: data.subName, subcat_id: v.subcat_id }, (res) => {
+                                                         let status = 1;
+                                                         if (res.data.status) {
+                                                            status = 1;
+                                                            getCategoryGroup(dispatch, false);
+                                                            setState(ChangeState(data, { edit: false }));
+                                                         } else {
+                                                            status = 0;
+                                                         }
+                                                         showAlert(dispatch, alertkey.C_CATEGORY_ALERT, {
+                                                            msg: res.data.message,
+                                                            status: status,
+                                                         });
+                                                      });
+                                                   },
+                                                   () => {
+                                                      showPopup(dispatch, popupkey.CATEGORY_ACCESS_DENIED);
+                                                   }
                                                 );
-                                                showPopup(dispatch, popupkey.D_SUBCATEGORY);
                                              }}
                                           />
                                        );
@@ -114,16 +205,27 @@ function Category() {
                                           );
                                        }}
                                        save={(e) => {
-                                          if (state.sub) {
-                                             categorySubCreateApi(state.sub, v.cat_id, dispatch, (msg, status) => {
-                                                console.log(msg);
-                                                setState(
-                                                   ChangeState(state, {
-                                                      sub: '',
-                                                   })
-                                                );
-                                             });
-                                          }
+                                          checkAccess(
+                                             dispatch,
+                                             appmodule,
+                                             state.module,
+                                             'c',
+                                             () => {
+                                                if (state.sub) {
+                                                   categorySubCreateApi(state.sub, v.cat_id, dispatch, (msg, status) => {
+                                                      console.log(msg);
+                                                      setState(
+                                                         ChangeState(state, {
+                                                            sub: '',
+                                                         })
+                                                      );
+                                                   });
+                                                }
+                                             },
+                                             () => {
+                                                showPopup(dispatch, popupkey.CATEGORY_ACCESS_DENIED);
+                                             }
+                                          );
                                        }}
                                     />
                                  </>
@@ -140,6 +242,7 @@ function Category() {
          {/*-------------------------------------[ POPUP COMPONENTS]------------------------------------*/}
          <DeleteCategory pos={state.deleteCategoryPos} />
          <DeleteSubCategory pos={state.deleteSubCategoryPos} mainPos={state.deleteCategoryPos} />
+         <AccessDenied displayKey={popupkey.CATEGORY_ACCESS_DENIED} />
 
          {/*-------------------------------------[ END POPUP COMPONENTS]------------------------------------*/}
       </div>
@@ -170,20 +273,30 @@ function CategoryExpandBtn(props) {
    return <CategoryListItemBtn ico={state.expand ? 'chevron-up' : 'chevron-down'} click={togleEve} />;
 }
 function InputText(props) {
-   const { value, placeholder, change } = props;
-   return <input type='text' value={value} onChange={change} placeholder={placeholder} className='form-control' />;
+   const { value, placeholder, change, name } = props;
+   return <input type='text' value={value} onChange={change} placeholder={placeholder} className='form-control' name={name} />;
 }
 
 function MainCategory(props) {
-   const { eKey, catName, children, save, del } = props;
-   const defaultState = { edit: false };
+   const { eKey, catName, children, save, del, name } = props;
+   const defaultState = { edit: false, catName: catName };
    const [state, setState] = useState(defaultState);
 
    return (
       <Accordion className='d-flex flex-column'>
          <CategoryList>
             <CategoryExpandBtn ico='chevron-down' eKey={eKey} />
-            {state.edit ? <InputText /> : <CategoryListName name={catName} />}
+            {state.edit ? (
+               <InputText
+                  name={name}
+                  value={state.catName}
+                  change={(e) => {
+                     setState(ChangeState(state, { catName: e.target.value }));
+                  }}
+               />
+            ) : (
+               <CategoryListName name={catName} />
+            )}
             <CategoryListItemBtn
                ico={state.edit ? 'close' : 'create-outline'}
                click={(e) => {
@@ -193,7 +306,7 @@ function MainCategory(props) {
             <CategoryListItemBtn
                ico={state.edit ? 'checkmark' : 'trash-outline'}
                click={(e) => {
-                  state.edit ? save() : del();
+                  state.edit ? save(state, setState) : del(state, setState);
                }}
             />
          </CategoryList>
@@ -206,11 +319,20 @@ function MainCategory(props) {
 
 function SubCategory(props) {
    const { subName, save, del } = props;
-   const defaultState = { edit: false };
+   const defaultState = { edit: false, subName: subName };
    const [state, setState] = useState(defaultState);
    return (
       <CategoryList>
-         {state.edit ? <InputText /> : <CategoryListName name={subName} />}
+         {state.edit ? (
+            <InputText
+               value={state.subName}
+               change={(e) => {
+                  setState(ChangeState(state, { subName: e.target.value }));
+               }}
+            />
+         ) : (
+            <CategoryListName name={subName} />
+         )}
 
          <CategoryListItemBtn
             ico={state.edit ? 'close' : 'create-outline'}
@@ -221,7 +343,7 @@ function SubCategory(props) {
          <CategoryListItemBtn
             ico={state.edit ? 'checkmark' : 'trash-outline'}
             click={(e) => {
-               state.edit ? save() : del();
+               state.edit ? save(state, setState) : del(state, setState);
             }}
          />
       </CategoryList>

@@ -9,6 +9,7 @@ import { Col } from 'react-bootstrap';
 import Alert from '../../components/Alert';
 import { FormItem, Text, Select, Option } from '../../components/CustomFormItem';
 import { TopLoader } from '../../components/Loader';
+import DisplayCommonError from '../../components/DisplayCommonError';
 //Logic
 import { createProduct } from '../../logic/product';
 import { fetchProduct, checkBarcode, getNextBarcode } from '../../logic/product';
@@ -66,7 +67,7 @@ function CreateProduct(props) {
          discount: yup.number(),
          vat: yup.number(),
       }),
-      onSubmit: (formData, s) => {
+      onSubmit: (formData) => {
          showLoader(dispatch, loaderkey.C_PRODUCT_L);
          createProduct(dispatch, formData, (res) => {
             let status = 1;
@@ -123,6 +124,7 @@ function CreateProduct(props) {
             title='CREATE PRODUCT'
          >
             <TopLoader state={loader.display[loaderkey.C_PRODUCT_L]} />
+            <DisplayCommonError />
 
             <form onSubmit={formik.handleSubmit} autoComplete='off' className='row w-100 h-100 m-0' id='create-product-form'>
                <Col md={12}>

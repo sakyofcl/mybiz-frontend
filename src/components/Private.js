@@ -3,9 +3,9 @@ import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 const Private = (props) => {
+   const { auth } = useSelector((state) => state);
    const Ele = props.ele;
-   //const authStore=useSelector((state)=>state.auth);
-   return true ? <Ele /> : <Navigate to='/login' />;
+   return auth.isOk ? <Ele /> : <Navigate to='/login' />;
 };
 
 export default Private;
